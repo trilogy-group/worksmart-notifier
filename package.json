@@ -1,0 +1,17 @@
+{
+  "name": "worksmart-notifier",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/trilogy-group/worksmart-notifier",
+  "author": "Kostiantyn Korniienko <kostiantyn.korniienko@trilogy.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/node-notifier": "^8.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "node-notifier": "^10.0.1"
+  }
+}
