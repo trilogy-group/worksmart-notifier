@@ -6,7 +6,7 @@ const processName = 'Crossover.exe';
 function checkProcess() {
   exec(`tasklist`, (err, stdout, stderr) => {
     if (err) {
-      // handle error
+      console.error(`Could not check process status: ${err}`);
       return;
     }
 
