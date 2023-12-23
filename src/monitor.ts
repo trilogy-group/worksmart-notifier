@@ -2,6 +2,7 @@ import notifier from 'node-notifier';
 import { exec } from 'child_process';
 
 const processName = 'Crossover.exe';
+const processFullPath = 'C:\\Program Files (x86)\\Crossover\\Crossover.exe';
 
 function checkProcess() {
   exec(`tasklist`, (err, stdout, stderr) => {
@@ -19,7 +20,7 @@ function checkProcess() {
         actions: ['restart', 'stop listening']
       }, function (err, response, metadata) {
         if (response === 'restart') {
-          exec(`start ${processName}`, (err, stdout, stderr) => {
+          exec(`start "${processFullPath}"`, (err, stdout, stderr) => {
             if (err) {
               console.error(`Could not restart ${processName}: ${err}`);
             }
@@ -27,6 +28,7 @@ function checkProcess() {
       } else if (response === 'stop listening') {
         // Stop checking
         clearInterval(interval);
+        console.log('Stopped checking process status');
       }
       });
     }
