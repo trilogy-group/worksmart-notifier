@@ -43,4 +43,9 @@ function checkProcess() {
   });
 }
 
+notifier.notify({
+  title: 'WorkSmart Checker',
+  message: `WorkSmart Checker is started`,
+  icon: iconPath,
+});
 let interval = setTimeout(checkProcess, defaultTimeout);
