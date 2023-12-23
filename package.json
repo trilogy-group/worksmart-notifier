@@ -6,7 +6,8 @@
   "author": "Kostiantyn Korniienko <kostiantyn.korniienko@trilogy.com>",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node src/monitor.ts"
+    "start": "ts-node src/monitor.ts",
+    "build": "npx tsc"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

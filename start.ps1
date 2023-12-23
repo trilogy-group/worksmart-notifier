@@ -1,0 +1,1 @@
+Start-Process -FilePath "yarn" -ArgumentList "run start" -WindowStyle Hidden -NoNewWindow
