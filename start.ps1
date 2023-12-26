@@ -1,3 +1,2 @@
-# Start-Process -FilePath "yarn" -ArgumentList "run start" -WorkingDirectory "$PSScriptRoot" #-WindowStyle Hidden
-Start-Process -FilePath "powershell" -ArgumentList "-Command", "yarn run start" -WorkingDirectory "$PSScriptRoot" -WindowStyle Hidden
-# Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "yarn run start" -WorkingDirectory "$PSScriptRoot"
+# Start-Process -FilePath "powershell" -ArgumentList "-Command", "yarn run start" -WorkingDirectory "$PSScriptRoot" -WindowStyle Hidden
+Start-Process -FilePath "C:\Program Files\nodejs\node.exe" -ArgumentList """C:\Work\Common\worksmart-notifier\node_modules\.bin\\..\ts-node\dist\bin.js""", "src/monitor.ts" -WorkingDirectory "$PSScriptRoot" -WindowStyle Hidden

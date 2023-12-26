@@ -24,14 +24,24 @@ function checkProcess() {
         wait: true,
         actions: ['Restart', 'Stop checking']
       }, function (err, response, metadata) {
-        if (response === 'Restart') {
+        console.debug('Notification response:', response)
+        if (err) {
+          console.error('WorkSmart Alert failure', {err, response, metadata});
+        }
+        if (response === 'restart') {
+          console.log(`Restarting ${processName}`)
           exec(`"${processFullPath}"`, (err, stdout, stderr) => {
             if (err) {
-              console.error(`Could not restart ${processName}: ${err}`);
+              console.error(`Could not restart ${processName}: ${stderr}`);
+              console.error(`Error details: ${err.message}`); 
+            }
+            if (stdout) {
+              console.log(`Restarted process stdout:`, stdout);
             }
           });
-        } else if (response === 'Stop checking') {
-          console.log('Stopped checking process status');
+        } else if (response === 'stop checking') {
+          console.log('Stopping WorkSmart Checker');
+          process.exit(0);
           return;
         }
         interval = setTimeout(checkProcess, defaultTimeout);
@@ -43,6 +53,7 @@ function checkProcess() {
   });
 }
 
+console.log(`Starting WorkSmart Checker`);
 notifier.notify({
   title: 'WorkSmart Checker',
   message: `WorkSmart Checker is started`,
