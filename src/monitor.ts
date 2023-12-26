@@ -1,12 +1,32 @@
 import notifier, { NotificationMetadata } from 'node-notifier';
 import { exec } from 'child_process';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { promisify } from 'util';
 import findProcess from 'find-process';
+import os from 'os';
+import dotenv from 'dotenv';
 
-const processFullPath = 'C:\\Program Files (x86)\\Crossover\\Crossover.exe';
-const processName = processFullPath.split('\\').pop()!;
+
+dotenv.config();
+
+let processFullPath = '';
+
+switch(os.platform()) {
+  case 'win32':
+    processFullPath = process.env.PROCESS_PATH_WINDOWS!;
+    break;
+  case 'linux':
+    processFullPath = process.env.PROCESS_PATH_LINUX!;
+    break;
+  case 'darwin':
+    processFullPath = process.env.PROCESS_PATH_MAC!;
+    break;
+  default:
+    console.error('Unsupported platform');
+}
+
 const defaultTimeout = 5000;
+const processName = basename(processFullPath);
 const iconPath = join(__dirname, '../images/toast.png');
 const execAsync = promisify(exec);
 
