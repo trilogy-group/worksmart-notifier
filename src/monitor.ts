@@ -2,6 +2,7 @@ import notifier, { NotificationMetadata } from 'node-notifier';
 import { exec } from 'child_process';
 import { join } from 'path';
 import { promisify } from 'util';
+import findProcess from 'find-process';
 
 const processFullPath = 'C:\\Program Files (x86)\\Crossover\\Crossover.exe';
 const processName = processFullPath.split('\\').pop()!;
@@ -11,8 +12,8 @@ const execAsync = promisify(exec);
 
 async function checkProcess() {
   try {
-    const { stdout } = await execAsync(`tasklist`);
-    if (!stdout.includes(processName)) {
+    const list = await findProcess('name', processName);
+    if (list.length === 0) {
       console.log(`${processName} is not running`);
       const { err, response, metadata } = await new Promise<{err: Error | null, response: string, metadata?: NotificationMetadata}>((resolve, reject) => {
         notifier.notify({
@@ -47,14 +48,13 @@ async function checkProcess() {
         process.exit(0);
         return;
       }
-      interval = setTimeout(checkProcess, defaultTimeout);
     } else {
       console.log(`${processName} is running`);
-      interval = setTimeout(checkProcess, defaultTimeout);
     }
   } catch (err) {
     console.error(`Could not check process status: ${err}`);
   }
+  interval = setTimeout(checkProcess, defaultTimeout);
 }
 
 console.log(`Starting WorkSmart Checker`);
