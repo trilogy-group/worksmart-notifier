@@ -10,39 +10,47 @@ const defaultTimeout = 5000;
 const iconPath = join(__dirname, '../images/toast.png');
 const execAsync = promisify(exec);
 
+async function notifyUser(message: string, actions: string[]) {
+  return new Promise<{err: Error | null, response: string, metadata?: NotificationMetadata}>((resolve, reject) => {
+    notifier.notify({
+      title: 'WorkSmart Alert',
+      message,
+      icon: iconPath,
+      sound: true,
+      wait: true,
+      actions
+    }, (err, response, metadata) => {
+      if (err) {
+        reject({ err, response, metadata });
+      } else {
+        resolve({ err, response, metadata });
+      }
+    });
+  });
+}
+
+async function restartProcess() {
+  try {
+    const { stdout } = await execAsync(`"${processFullPath}"`);
+    console.log(`Restarted process stdout:`, stdout);
+  } catch (err) {
+    console.error(`Could not restart ${processName}: ${err}`);
+  }
+}
+
 async function checkProcess() {
   try {
     const list = await findProcess('name', processName);
     if (list.length === 0) {
       console.log(`${processName} is not running`);
-      const { err, response, metadata } = await new Promise<{err: Error | null, response: string, metadata?: NotificationMetadata}>((resolve, reject) => {
-        notifier.notify({
-          title: 'WorkSmart Alert',
-          message: `WorkSmart has stopped running!`,
-          icon: iconPath,
-          sound: true,
-          wait: true,
-          actions: ['Restart', 'Stop checking']
-        }, (err, response, metadata) => {
-          if (err) {
-            reject({ err, response, metadata });
-          } else {
-            resolve({ err, response, metadata });
-          }
-        });
-      });
+      const { err, response, metadata } = await notifyUser(`WorkSmart has stopped running!`, ['Restart', 'Stop checking']);
       console.debug('Notification response:', response)
       if (err) {
         console.error('WorkSmart Alert failure', {err, response, metadata});
       }
       if (response === 'restart') {
         console.log(`Restarting ${processName}`)
-        try {
-          const { stdout } = await execAsync(`"${processFullPath}"`);
-          console.log(`Restarted process stdout:`, stdout);
-        } catch (err) {
-          console.error(`Could not restart ${processName}: ${err}`);
-        }
+        await restartProcess();
       } else if (response === 'stop checking') {
         console.log('Stopping WorkSmart Checker');
         process.exit(0);
@@ -58,9 +66,5 @@ async function checkProcess() {
 }
 
 console.log(`Starting WorkSmart Checker`);
-notifier.notify({
-  title: 'WorkSmart Checker',
-  message: `WorkSmart Checker is started`,
-  icon: iconPath,
-});
+notifyUser(`WorkSmart Checker is started`, []);
 let interval = setTimeout(checkProcess, defaultTimeout);
