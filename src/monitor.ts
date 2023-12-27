@@ -29,7 +29,14 @@ if (!processFullPath) {
 
 const defaultTimeout = 5000;
 const processName = basename(processFullPath);
-const iconPath = join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, '../images/toast.png');
+const fs = require('fs');
+let iconPath = join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, '../images/toast.png');
+if (fs.existsSync('./toast.png')) {
+  iconPath = './toast.png';
+} else if (fs.existsSync('./images/toast.png')) {
+  iconPath = './images/toast.png';
+}
+console.log('Icon path:', iconPath);
 const execAsync = promisify(exec);
 
 async function notifyUser(message: string, actions: string[]) {

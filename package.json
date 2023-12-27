@@ -6,18 +6,35 @@
   "author": "Kostiantyn Korniienko <kostiantyn.korniienko@trilogy.com>",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node src/monitor.ts"
+    "start": "ts-node src/monitor.ts",
+    "build": "tsc --outDir out",
+    "package:windows": "npx pkg . --output dist/worksmart-notifier.exe",
+    "postpackage:windows": "ncp node_modules/node-notifier/vendor/snoreToast dist/notifier"
+  },
+  "bin": "out/monitor.js",
+  "pkg": {
+    "scripts": "out/**/*.js",
+    "assets": [
+      "images/*.png",
+      "node_modules/node-notifier/vendor/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "dist"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
     "@types/node-notifier": "^8.0.5",
+    "ncp": "^2.0.0",
+    "pkg": "^5.8.1",
+    "rcedit": "^4.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
     "find-process": "^1.4.7",
-    "node-notifier": "^10.0.1",
-    "pkg": "^5.8.1"
+    "node-notifier": "^10.0.1"
   }
 }
