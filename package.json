@@ -17,6 +17,7 @@
   "dependencies": {
     "dotenv": "^16.3.1",
     "find-process": "^1.4.7",
-    "node-notifier": "^10.0.1"
+    "node-notifier": "^10.0.1",
+    "pkg": "^5.8.1"
   }
 }
