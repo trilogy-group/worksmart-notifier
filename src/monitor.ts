@@ -9,20 +9,22 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-let processFullPath = '';
+let processFullPath = process.env.WORKSMART_PROCESS_PATH;
 
-switch(os.platform()) {
-  case 'win32':
-    processFullPath = process.env.PROCESS_PATH_WINDOWS!;
-    break;
-  case 'linux':
-    processFullPath = process.env.PROCESS_PATH_LINUX!;
-    break;
-  case 'darwin':
-    processFullPath = process.env.PROCESS_PATH_MAC!;
-    break;
-  default:
-    console.error('Unsupported platform');
+if (!processFullPath) {
+  switch(os.platform()) {
+    case 'win32':
+      processFullPath = 'C:\\Program Files (x86)\\Crossover\\Crossover.exe';
+      break;
+    case 'linux':
+      processFullPath = '/usr/bin/crossover';
+      break;
+    case 'darwin':
+      processFullPath = '/Applications/Crossover.app';
+      break;
+    default:
+      throw new Error('Unsupported platform, please use WORKSMART_PROCESS_PATH to define path to the application.');
+  }
 }
 
 const defaultTimeout = 5000;
@@ -33,7 +35,7 @@ const execAsync = promisify(exec);
 async function notifyUser(message: string, actions: string[]) {
   return new Promise<{err: Error | null, response: string, metadata?: NotificationMetadata}>((resolve, reject) => {
     notifier.notify({
-      title: 'WorkSmart Alert',
+      title: 'WorkSmart Notifier',
       message,
       icon: iconPath,
       sound: true,
