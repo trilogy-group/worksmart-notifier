@@ -9,21 +9,21 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-let processFullPath = '';
+let processFullPath = 'C:\\Program Files (x86)\\Crossover\\Crossover.exe';
 
-switch(os.platform()) {
-  case 'win32':
-    processFullPath = process.env.PROCESS_PATH_WINDOWS!;
-    break;
-  case 'linux':
-    processFullPath = process.env.PROCESS_PATH_LINUX!;
-    break;
-  case 'darwin':
-    processFullPath = process.env.PROCESS_PATH_MAC!;
-    break;
-  default:
-    console.error('Unsupported platform');
-}
+// switch(os.platform()) {
+//   case 'win32':
+//     processFullPath = process.env.PROCESS_PATH_WINDOWS!;
+//     break;
+//   case 'linux':
+//     processFullPath = process.env.PROCESS_PATH_LINUX!;
+//     break;
+//   case 'darwin':
+//     processFullPath = process.env.PROCESS_PATH_MAC!;
+//     break;
+//   default:
+//     console.error('Unsupported platform');
+// }
 
 const defaultTimeout = 5000;
 const processName = basename(processFullPath);
