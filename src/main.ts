@@ -21,9 +21,10 @@ function getPath(filePath: string) {
   return resolve(join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, filePath));
 }
 
-let iconPath = nativeImage.createFromPath(getPath('../images/toast_64.ico'));
-let notificationIcon = nativeImage.createFromPath(getPath('../images/toast.png'));
-let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/toast_disabled.png'));
+let notificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256.png'));
+let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256_disabled.png'));
+let iconPath = notificationIcon;
+// let iconPath = nativeImage.createFromPath(getPath('../images/toast_64.ico'));
 
 const notificationObject: Pick<NotificationConstructorOptions, 'title' | 'icon'> = {
   title,
@@ -72,14 +73,13 @@ function createTray() {
       toolTip: 'if checked, will check if the process is running',
       type: 'checkbox',
       checked: true,
-      click: () => {
+      click: async () => {
         if (hasChecks()) {
           stopProcessChecks();
-          tray?.setImage(disabledNotificationIcon);
         } else {
-          startProcessChecks();
-          tray?.setImage(notificationIcon);
+          await startProcessChecks();
         }
+        updateCheckerTray()
       },
     },
     { label: 'Quit', click: () => { app.quit(); } }
@@ -87,8 +87,8 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 }
 
-function rebuildCheckerTray() {
-  console.log('rebuilding checker');
+function updateCheckerTray() {
+  console.log('updating checker tray');
   if (!contextMenu) {
     console.log('no context menu');
     return;
@@ -99,10 +99,10 @@ function rebuildCheckerTray() {
     return;
   }
   const checksEnabled = hasChecks()
-  checker.checked = hasChecks();
+  checker.checked = checksEnabled;
   tray?.setImage(checksEnabled ? notificationIcon : disabledNotificationIcon);
 
-  console.log('checker rebuilt');
+  console.log('checker updated');
 }
 
 
@@ -139,9 +139,14 @@ async function startProcessChecks() {
     const list = await findProcess('name', processName);
     if (list.length === 0) {
       console.log(`${processName} is not running`);
+      if (restartNotification) {
+        restartNotification.close();
+        restartNotification = undefined;
+      }
       restartNotification = new Notification({
         ...notificationObject,
-        body: `${processName} is not running. Click to restart. Close to stop checks.`,
+        body: `${processName} is not running. Click on message to restart. Click on cross to stop checks.`,
+        timeoutType: 'never',
       });
       restartNotification.on('click', (event) => {
         console.log('click', event);
@@ -150,7 +155,7 @@ async function startProcessChecks() {
       restartNotification.on('close', (event) => {
         console.log('close', event);
         stopProcessChecks();
-        rebuildCheckerTray();
+        updateCheckerTray();
       });
       restartNotification.show();
     } else {
@@ -176,7 +181,7 @@ app.whenReady().then(() => {
   // createWindow();
   createTray();
   notificationStart();
-  startProcessChecks();
+  startProcessChecks().then();
 });
 
 app.on('window-all-closed', () => {
