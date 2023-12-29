@@ -7,40 +7,17 @@
   "scripts": {
     "build": "npx tsc",
     "start": "yarn run build && npx electron .",
-    "start_old": "ts-node src/monitor.ts",
-    "package": "npx electron-packager . --platform=win32",
-    "build_old": "tsc --outDir out",
-    "package_old:windows": "npx pkg . --output dist/worksmart-notifier.exe",
-    "postpackage_old:windows": "ncp node_modules/node-notifier/vendor/snoreToast dist/notifier"
+    "package": "npx electron-packager . --platform=win32"
   },
   "main": "dist/main.js",
-  "bin": "out/monitor.js",
-  "pkg": {
-    "scripts": "out/**/*.js",
-    "assets": [
-      "images/*.png",
-      "node_modules/node-notifier/vendor/**/*"
-    ],
-    "targets": [
-      "node18-win-x64"
-    ],
-    "outputPath": "dist"
-  },
   "devDependencies": {
     "@types/node": "^20.10.5",
-    "@types/node-notifier": "^8.0.5",
-    "electron-packager": "^17.1.2",
-    "ncp": "^2.0.0",
-    "pkg": "^5.8.1",
-    "rcedit": "^4.0.1",
-    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
     "electron": "^28.1.0",
-    "find-process": "^1.4.7",
-    "node-notifier": "^10.0.1"
+    "find-process": "^1.4.7"
   },
   "packageManager": "yarn@4.0.2"
 }
