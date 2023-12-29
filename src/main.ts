@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, Notification, nativeImage, NotificationConstructorOptions } from 'electron';
+import { app, Tray, Menu, Notification, nativeImage, NotificationConstructorOptions } from 'electron';
 import { exec } from 'child_process';
 import { join, basename, resolve } from 'path';
 import { promisify } from 'util';
@@ -8,7 +8,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-let mainWindow: BrowserWindow | undefined;
 let tray: Tray | undefined;
 let contextMenu: Electron.Menu | undefined;
 let restartNotification: Notification | undefined;
@@ -44,24 +43,6 @@ if (!processFullPath) {
 
 let processName = basename(processFullPath);
 
-// function createWindow() {
-//   mainWindow = new BrowserWindow({
-//     title,
-//     width: 800,
-//     height: 600,
-//     icon: iconPath,
-//     webPreferences: {
-//       nodeIntegration: true,
-//     }
-//   });
-
-//   mainWindow.loadFile(getPath('../public/index.html'));
-
-//   mainWindow.on('closed', () => {
-//     mainWindow = undefined;
-//   });
-// }
-
 function createTray() {
   tray = new Tray(iconPath);
   tray.setToolTip(title);
@@ -72,11 +53,11 @@ function createTray() {
       toolTip: 'if checked, will check if the process is running',
       type: 'checkbox',
       checked: true,
-      click: async () => {
+      click: () => {
         if (hasChecks()) {
           stopProcessChecks();
         } else {
-          await startProcessChecks();
+          setupProcessChecks(1_000);
         }
         updateCheckerTray()
       },
@@ -166,7 +147,11 @@ async function startProcessChecks() {
   } catch (err) {
     console.error(`Could not check process status: ${err}`);
   }
-  lastTimeout = setTimeout(startProcessChecks, defaultTimeout);
+  setupProcessChecks();
+}
+
+function setupProcessChecks(timeout = defaultTimeout) {
+  lastTimeout = setTimeout(startProcessChecks, timeout);
 }
 
 function notificationStart() {
@@ -180,10 +165,9 @@ function notificationStart() {
 
 app.whenReady().then(() => {
   app.setAppUserModelId(title);
-  // createWindow();
   createTray();
   notificationStart();
-  startProcessChecks().then();
+  setupProcessChecks(5_000);
 });
 
 app.on('window-all-closed', () => {
@@ -192,8 +176,3 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('activate', () => {
-  // if (mainWindow === null) {
-  //   createWindow();
-  // }
-});
