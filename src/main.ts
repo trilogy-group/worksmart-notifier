@@ -1,7 +1,7 @@
-import { app, BrowserWindow, Tray, Menu, Notification } from 'electron';
+import { app, BrowserWindow, Tray, Menu, Notification, nativeImage, NotificationConstructorOptions } from 'electron';
 import * as path from 'path';
 import { exec } from 'child_process';
-import { join, basename } from 'path';
+import { join, basename, resolve } from 'path';
 import { promisify } from 'util';
 import findProcess from 'find-process';
 import os from 'os';
@@ -12,16 +12,20 @@ dotenv.config();
 let mainWindow: BrowserWindow | null;
 let tray: Tray | null;
 let processFullPath = process.env.WORKSMART_PROCESS_PATH;
-let defaultTimeout = 5000;
+let defaultTimeout = 15_000;
+const title = 'WorkSmart Notifier' as const;
 
 function getPath(filePath:string) {
-    return join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, filePath);
+    return resolve(join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, filePath));
 }
 
-let iconPath = getPath('../images/toast_64.ico');
+let iconPath = nativeImage.createFromPath(getPath('../images/toast_64.ico'));
+let notificationIconPath = nativeImage.createFromPath(getPath('../images/toast.png'));
 
-
-console.log('Icon path:', iconPath);
+const notificationObject: Pick<NotificationConstructorOptions, 'title' | 'icon'> = {
+    title,
+    icon: notificationIconPath,
+}
 
 let execAsync = promisify(exec);
 
@@ -45,8 +49,10 @@ let processName = basename(processFullPath);
 
 function createWindow() {
   mainWindow = new BrowserWindow({
+    title,
     width: 800,
     height: 600,
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: true,
     }
@@ -63,16 +69,8 @@ function createTray() {
   tray = new Tray(iconPath); // Path to your tray icon
   const contextMenu = Menu.buildFromTemplate([
     { 
-      label: 'Show Notification', 
-      click: () => {
-        let notification = new Notification({
-          title: 'WorkSmart Notifier',
-          body: `${processName} is not running`,
-        //   icon: iconPath,
-        //   actions: ['Restart', 'Stop checking']
-        });
-        notification.show();
-      } 
+      label: 'Run Checker', 
+      click: () => checkProcess(),
     },
     { label: 'Quit', click: () => { app.quit(); } }
   ]);
@@ -91,14 +89,22 @@ async function restartProcess() {
 
 let lastTimeout: NodeJS.Timeout | undefined;
 
+function clearLocalTimeout() {
+    if(lastTimeout) {
+        clearTimeout(lastTimeout);
+    }
+}
+
 async function checkProcess() {
   try {
+    clearLocalTimeout();
     const list = await findProcess('name', processName);
     if (list.length === 0) {
       console.log(`${processName} is not running`);
       const notification = new Notification({
-        title: 'WorkSmart Notifier',
+        ...notificationObject,
         body: `${processName} is not running`,
+        urgency: 'critical',
         actions: [
           {
             type: 'button',
@@ -111,13 +117,12 @@ async function checkProcess() {
         ]
       });
       notification.on('action', (event, index) => {
+        console.log(event, index);
         if (index === 0) {
           restartProcess();
         } else if (index === 1) {
           console.log('Stop checking clicked');
-          if(lastTimeout) {
-            clearTimeout(lastTimeout);
-          }
+          clearLocalTimeout()
         }
       });
       notification.show();
@@ -132,13 +137,19 @@ async function checkProcess() {
 
 function notificationStart(){
     const notification = new Notification({
-        title: 'WorkSmart Notifier',
-        body: 'Notifier started'
+        ...notificationObject,
+        body: 'Notifier started',
       });
       notification.show();
 }
 
-app.whenReady().then(createWindow).then(createTray).then(notificationStart).then(checkProcess);
+app.whenReady().then(() => {
+    app.setAppUserModelId(title);
+    createWindow();
+    createTray();
+    notificationStart();
+    checkProcess();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
