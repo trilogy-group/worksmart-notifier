@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "npx tsc",
-    "start": "npx electron .",
+    "start": "yarn run build && npx electron .",
     "start_old": "ts-node src/monitor.ts",
     "package": "npx electron-packager . --platform=win32",
     "build_old": "tsc --outDir out",
