@@ -1,16 +1,19 @@
 {
   "name": "worksmart-notifier",
   "version": "1.0.0",
-  "main": "index.js",
   "repository": "https://github.com/trilogy-group/worksmart-notifier",
   "author": "Kostiantyn Korniienko <kostiantyn.korniienko@trilogy.com>",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node src/monitor.ts",
-    "build": "tsc --outDir out",
-    "package:windows": "npx pkg . --output dist/worksmart-notifier.exe",
-    "postpackage:windows": "ncp node_modules/node-notifier/vendor/snoreToast dist/notifier"
+    "build": "npx tsc",
+    "start": "npx electron .",
+    "start_old": "ts-node src/monitor.ts",
+    "package": "npx electron-packager . --platform=win32",
+    "build_old": "tsc --outDir out",
+    "package_old:windows": "npx pkg . --output dist/worksmart-notifier.exe",
+    "postpackage_old:windows": "ncp node_modules/node-notifier/vendor/snoreToast dist/notifier"
   },
+  "main": "dist/main.js",
   "bin": "out/monitor.js",
   "pkg": {
     "scripts": "out/**/*.js",
@@ -26,6 +29,7 @@
   "devDependencies": {
     "@types/node": "^20.10.5",
     "@types/node-notifier": "^8.0.5",
+    "electron-packager": "^17.1.2",
     "ncp": "^2.0.0",
     "pkg": "^5.8.1",
     "rcedit": "^4.0.1",
@@ -34,6 +38,7 @@
   },
   "dependencies": {
     "dotenv": "^16.3.1",
+    "electron": "^28.1.0",
     "find-process": "^1.4.7",
     "node-notifier": "^10.0.1"
   },
