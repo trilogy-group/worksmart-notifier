@@ -23,6 +23,7 @@ function getPath(filePath: string) {
 
 let iconPath = nativeImage.createFromPath(getPath('../images/toast_64.ico'));
 let notificationIcon = nativeImage.createFromPath(getPath('../images/toast.png'));
+let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/toast_disabled.png'));
 
 const notificationObject: Pick<NotificationConstructorOptions, 'title' | 'icon'> = {
   title,
@@ -74,8 +75,10 @@ function createTray() {
       click: () => {
         if (hasChecks()) {
           stopProcessChecks();
+          tray?.setImage(disabledNotificationIcon);
         } else {
           startProcessChecks();
+          tray?.setImage(notificationIcon);
         }
       },
     },
@@ -95,9 +98,13 @@ function rebuildCheckerTray() {
     console.log('no checker');
     return;
   }
+  const checksEnabled = hasChecks()
   checker.checked = hasChecks();
+  tray?.setImage(checksEnabled ? notificationIcon : disabledNotificationIcon);
+
   console.log('checker rebuilt');
 }
+
 
 async function restartProcess() {
   console.log('restarting', processFullPath)
@@ -138,7 +145,7 @@ async function startProcessChecks() {
       });
       restartNotification.on('click', (event) => {
         console.log('click', event);
-        restartProcess();
+        restartProcess().then();
       });
       restartNotification.on('close', (event) => {
         console.log('close', event);
