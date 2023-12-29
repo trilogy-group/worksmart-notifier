@@ -24,7 +24,6 @@ function getPath(filePath: string) {
 let notificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256.png'));
 let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256_disabled.png'));
 let iconPath = notificationIcon;
-// let iconPath = nativeImage.createFromPath(getPath('../images/toast_64.ico'));
 
 const notificationObject: Pick<NotificationConstructorOptions, 'title' | 'icon'> = {
   title,
@@ -122,11 +121,14 @@ function hasChecks(): boolean {
   return Boolean(lastTimeout);
 }
 
-function stopProcessChecks() {
+function stopProcessChecks(cleanup: boolean = false) {
   if (lastTimeout) {
-    console.log('stopping process checks');
     clearTimeout(lastTimeout);
-    lastTimeout = undefined;
+    if (!cleanup) {
+      lastTimeout = undefined;
+    } else {
+      console.log('stopped process checks');
+    }
     return true;
   }
   return false;
@@ -134,7 +136,7 @@ function stopProcessChecks() {
 
 async function startProcessChecks() {
   try {
-    stopProcessChecks();
+    stopProcessChecks(true);
     console.log('process checks started');
     const list = await findProcess('name', processName);
     if (list.length === 0) {
