@@ -12,6 +12,7 @@
   "main": "dist/main.js",
   "devDependencies": {
     "@types/node": "^20.10.5",
+    "electron-packager": "^17.1.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {

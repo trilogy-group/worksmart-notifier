@@ -1,5 +1,4 @@
 import { app, BrowserWindow, Tray, Menu, Notification, nativeImage, NotificationConstructorOptions } from 'electron';
-import * as path from 'path';
 import { exec } from 'child_process';
 import { join, basename, resolve } from 'path';
 import { promisify } from 'util';
@@ -9,36 +8,33 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-let mainWindow: BrowserWindow | null;
-let tray: Tray | null;
+let mainWindow: BrowserWindow | undefined;
+let tray: Tray | undefined;
+let contextMenu: Electron.Menu | undefined;
+let restartNotification: Notification | undefined;
+
 let processFullPath = process.env.WORKSMART_PROCESS_PATH;
 let defaultTimeout = 15_000;
 const title = 'WorkSmart Notifier' as const;
 
-function getPath(filePath:string) {
-    return resolve(join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, filePath));
+function getPath(filePath: string) {
+  return resolve(join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, filePath));
 }
 
 let iconPath = nativeImage.createFromPath(getPath('../images/toast_64.ico'));
-let notificationIconPath = nativeImage.createFromPath(getPath('../images/toast.png'));
+let notificationIcon = nativeImage.createFromPath(getPath('../images/toast.png'));
 
 const notificationObject: Pick<NotificationConstructorOptions, 'title' | 'icon'> = {
-    title,
-    icon: notificationIconPath,
+  title,
+  icon: notificationIcon,
 }
 
 let execAsync = promisify(exec);
 
 if (!processFullPath) {
-  switch(os.platform()) {
+  switch (os.platform()) {
     case 'win32':
       processFullPath = 'C:\\Program Files (x86)\\Crossover\\Crossover.exe';
-      break;
-    case 'linux':
-      processFullPath = '/usr/bin/crossover';
-      break;
-    case 'darwin':
-      processFullPath = '/Applications/Crossover.app';
       break;
     default:
       throw new Error('Unsupported platform, please use WORKSMART_PROCESS_PATH to define path to the application.');
@@ -47,38 +43,64 @@ if (!processFullPath) {
 
 let processName = basename(processFullPath);
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    title,
-    width: 800,
-    height: 600,
-    icon: iconPath,
-    webPreferences: {
-      nodeIntegration: true,
-    }
-  });
+// function createWindow() {
+//   mainWindow = new BrowserWindow({
+//     title,
+//     width: 800,
+//     height: 600,
+//     icon: iconPath,
+//     webPreferences: {
+//       nodeIntegration: true,
+//     }
+//   });
 
-  mainWindow.loadFile(getPath('../public/index.html')); // Load your HTML file here
+//   mainWindow.loadFile(getPath('../public/index.html'));
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-}
+//   mainWindow.on('closed', () => {
+//     mainWindow = undefined;
+//   });
+// }
 
 function createTray() {
-  tray = new Tray(iconPath); // Path to your tray icon
-  const contextMenu = Menu.buildFromTemplate([
-    { 
-      label: 'Run Checker', 
-      click: () => checkProcess(),
+  tray = new Tray(iconPath);
+  tray.setToolTip(title);
+  contextMenu = Menu.buildFromTemplate([
+    {
+      id: 'checker',
+      label: 'Is checking',
+      toolTip: 'if checked, will check if the process is running',
+      type: 'checkbox',
+      checked: true,
+      click: () => {
+        if (hasChecks()) {
+          stopProcessChecks();
+        } else {
+          startProcessChecks();
+        }
+      },
     },
     { label: 'Quit', click: () => { app.quit(); } }
   ]);
-  tray.setToolTip('Electron Tray App');
   tray.setContextMenu(contextMenu);
 }
 
+function rebuildCheckerTray() {
+  console.log('rebuilding checker');
+  if (!contextMenu) {
+    console.log('no context menu');
+    return;
+  }
+  const checker = contextMenu.getMenuItemById('checker');
+  if (!checker) {
+    console.log('no checker');
+    return;
+  }
+  checker.checked = hasChecks();
+  console.log('checker rebuilt');
+}
+
 async function restartProcess() {
+  console.log('restarting', processFullPath)
   try {
     const { stdout } = await execAsync(`"${processFullPath}"`);
     console.log(`Restarted process stdout:`, stdout);
@@ -89,66 +111,65 @@ async function restartProcess() {
 
 let lastTimeout: NodeJS.Timeout | undefined;
 
-function clearLocalTimeout() {
-    if(lastTimeout) {
-        clearTimeout(lastTimeout);
-    }
+function hasChecks(): boolean {
+  return Boolean(lastTimeout);
 }
 
-async function checkProcess() {
+function stopProcessChecks() {
+  if (lastTimeout) {
+    console.log('stopping process checks');
+    clearTimeout(lastTimeout);
+    lastTimeout = undefined;
+    return true;
+  }
+  return false;
+}
+
+async function startProcessChecks() {
   try {
-    clearLocalTimeout();
+    stopProcessChecks();
+    console.log('process checks started');
     const list = await findProcess('name', processName);
     if (list.length === 0) {
       console.log(`${processName} is not running`);
-      const notification = new Notification({
+      restartNotification = new Notification({
         ...notificationObject,
-        body: `${processName} is not running`,
-        urgency: 'critical',
-        actions: [
-          {
-            type: 'button',
-            text: 'Restart',
-          },
-          {
-            type: 'button',
-            text: 'Stop checking',
-          }
-        ]
+        body: `${processName} is not running. Click to restart. Close to stop checks.`,
       });
-      notification.on('action', (event, index) => {
-        console.log(event, index);
-        if (index === 0) {
-          restartProcess();
-        } else if (index === 1) {
-          console.log('Stop checking clicked');
-          clearLocalTimeout()
-        }
+      restartNotification.on('click', (event) => {
+        console.log('click', event);
+        restartProcess();
       });
-      notification.show();
+      restartNotification.on('close', (event) => {
+        console.log('close', event);
+        stopProcessChecks();
+        rebuildCheckerTray();
+      });
+      restartNotification.show();
     } else {
       console.log(`${processName} is running`);
     }
   } catch (err) {
     console.error(`Could not check process status: ${err}`);
   }
-  lastTimeout = setTimeout(checkProcess, defaultTimeout);
+  lastTimeout = setTimeout(startProcessChecks, defaultTimeout);
 }
 
-function notificationStart(){
-    const notification = new Notification({
-        ...notificationObject,
-        body: 'Notifier started',
-      });
-      notification.show();
+function notificationStart() {
+  const notification = new Notification({
+    ...notificationObject,
+    body: 'Notifier started',
+    silent: true,
+  });
+  notification.show();
 }
 
 app.whenReady().then(() => {
-    app.setAppUserModelId(title);
-    createWindow();
-    createTray();
-    notificationStart();
-    checkProcess();
+  app.setAppUserModelId(title);
+  // createWindow();
+  createTray();
+  notificationStart();
+  startProcessChecks();
 });
 
 app.on('window-all-closed', () => {
@@ -158,7 +179,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
+  // if (mainWindow === null) {
+  //   createWindow();
+  // }
 });
