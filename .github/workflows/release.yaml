@@ -17,14 +17,24 @@ jobs:
         with:
           node-version: "18"
 
+      - name: Cache Wine
+        uses: actions/cache@v3
+        with:
+          path: ~/.wine
+          key: ${{ runner.os }}-wine
+          restore-keys: |
+            ${{ runner.os }}-wine
+
       - name: Install Wine
         run: |
-          sudo dpkg --add-architecture i386 
-          wget -nc https://dl.winehq.org/wine-builds/winehq.key
-          sudo apt-key add winehq.key
-          sudo add-apt-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ focal main' 
-          sudo apt update
-          sudo apt install --install-recommends winehq-stable
+          if [ ! -d "~/.wine" ]; then
+            sudo dpkg --add-architecture i386 
+            wget -nc https://dl.winehq.org/wine-builds/winehq.key
+            sudo apt-key add winehq.key
+            sudo add-apt-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ focal main' 
+            sudo apt update
+            sudo apt install --install-recommends winehq-stable
+          fi
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
@@ -37,17 +47,17 @@ jobs:
 
       - name: Get version
         id: package
-        run: echo "::set-output name=version::$(node -p "require('./package.json').version")"
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
       - name: Check if tag exists
         id: check
         run: |
-          TAG_EXISTS=$(curl --silent https://api.github.com/repos/$GITHUB_REPOSITORY/git/ref/tags/v${{ steps.package.outputs.version }} > /dev/null; echo $?)
-          echo "::set-output name=exists::$TAG_EXISTS"
+          TAG_EXISTS=$(curl --silent https://api.github.com/repos/$GITHUB_REPOSITORY/git/ref/tags/v${{ env.version }} > /dev/null; echo $?)
+          echo "exists=$TAG_EXISTS" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
-        if: steps.check.outputs.exists == '1'
+        if: steps.check.outputs.exists != '1'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -58,12 +68,12 @@ jobs:
           prerelease: false
 
       - name: Create zip of directory
-        if: steps.check.outputs.exists == '1'
+        if: steps.check.outputs.exists != '1'
         run: |
           zip -r worksmart-notifier-win32-x64.zip worksmart-notifier-win32-x64
 
       - name: Upload Release Asset
-        if: steps.check.outputs.exists == '1'
+        if: steps.check.outputs.exists != '1'
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
