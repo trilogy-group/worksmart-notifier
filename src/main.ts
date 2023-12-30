@@ -7,6 +7,21 @@ import os from 'os';
 import dotenv from 'dotenv';
 import AutoLaunch from 'auto-launch';
 import storage from 'node-persist';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'combined.log' }),
+    new winston.transports.Console()
+  ]
+});
+
+logger.info('Starting application');
 
 dotenv.config();
 
@@ -14,7 +29,7 @@ dotenv.config();
 let tray: Tray | undefined;
 let contextMenu: Electron.Menu | undefined;
 let restartNotification: Notification | undefined;
-let autoLauncher = new AutoLaunch({ name: 'WorkSmart Notifier' });
+let autoLauncher = new AutoLaunch({ name: 'WorkSmartNotifier', isHidden: false });
 
 let processFullPath = process.env.WORKSMART_PROCESS_PATH;
 let defaultTimeout = 15_000;
@@ -82,37 +97,42 @@ async function createTray() {
         }
       },
     },
-    { label: 'Quit', click: () => { app.quit(); } }
+    {
+      label: 'Quit', click: () => {
+        logger.info('Exiting application');
+        app.quit();
+      }
+    }
   ]);
   tray.setContextMenu(contextMenu);
 }
 
 function updateCheckerTray() {
-  console.log('updating checker tray');
+  logger.info('updating checker tray');
   if (!contextMenu) {
-    console.log('no context menu');
+    logger.info('no context menu');
     return;
   }
   const checker = contextMenu.getMenuItemById('checker');
   if (!checker) {
-    console.log('no checker');
+    logger.info('no checker');
     return;
   }
   const checksEnabled = hasChecks()
   checker.checked = checksEnabled;
   tray?.setImage(checksEnabled ? notificationIcon : disabledNotificationIcon);
 
-  console.log('checker updated');
+  logger.info('checker updated');
 }
 
 
 async function restartProcess() {
-  console.log('restarting', processFullPath)
+  logger.info('restarting', processFullPath)
   try {
     const { stdout } = await execAsync(`"${processFullPath}"`);
-    console.log(`Restarted process stdout:`, stdout);
+    logger.info(`Restarted process stdout:`, stdout);
   } catch (err) {
-    console.error(`Could not restart ${processName}: ${err}`);
+    logger.error(`Could not restart ${processName}: ${err}`);
   }
 }
 
@@ -128,7 +148,7 @@ function stopProcessChecks(cleanup: boolean = false) {
     if (!cleanup) {
       lastTimeout = undefined;
     } else {
-      console.log('stopped process checks');
+      logger.info('stopped process checks');
     }
     return true;
   }
@@ -138,10 +158,10 @@ function stopProcessChecks(cleanup: boolean = false) {
 async function startProcessChecks() {
   try {
     stopProcessChecks(true);
-    console.log('process checks started');
+    logger.info('process checks started');
     const list = await findProcess('name', processName);
     if (list.length === 0) {
-      console.log(`${processName} is not running`);
+      logger.info(`${processName} is not running`);
       if (restartNotification) {
         restartNotification.close();
         restartNotification = undefined;
@@ -152,20 +172,20 @@ async function startProcessChecks() {
         timeoutType: 'never',
       });
       restartNotification.on('click', (event) => {
-        console.log('click', event);
+        logger.info('click', event);
         restartProcess().then();
       });
       restartNotification.on('close', (event) => {
-        console.log('close', event);
+        logger.info('close', event);
         stopProcessChecks();
         updateCheckerTray();
       });
       restartNotification.show();
     } else {
-      console.log(`${processName} is running`);
+      logger.info(`${processName} is running`);
     }
   } catch (err) {
-    console.error(`Could not check process status: ${err}`);
+    logger.error(`Could not check process status: ${err}`);
   }
   setupProcessChecks();
 }
@@ -188,7 +208,7 @@ app.whenReady().then(async () => {
   await storage.init();
   const autoStart = await storage.getItem('autoStart');
   const autoLauncherEnabled = await autoLauncher.isEnabled();
-  console.log('autoStart', autoStart, 'autoLauncherEnabled', autoLauncherEnabled)
+  logger.info('autoStart', autoStart, 'autoLauncherEnabled', autoLauncherEnabled)
   if (autoStart === undefined || autoStart && !autoLauncherEnabled) {
     autoLauncher.enable();
   }
@@ -199,6 +219,7 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    logger.info('Exiting application');
     app.quit();
   }
 });

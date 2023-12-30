@@ -1,2 +1,0 @@
-# Start-Process -FilePath "powershell" -ArgumentList "-Command", "yarn run start" -WorkingDirectory "$PSScriptRoot" -WindowStyle Hidden
-Start-Process -FilePath "C:\Program Files\nodejs\node.exe" -ArgumentList """$PSScriptRoot\node_modules\.bin\\..\ts-node\dist\bin.js""", "src/monitor.ts" -WorkingDirectory "$PSScriptRoot" -WindowStyle Hidden

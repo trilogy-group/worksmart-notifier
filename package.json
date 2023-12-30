@@ -1,5 +1,6 @@
 {
   "name": "worksmart-notifier",
+  "description": "WorkSmart Notifier is an application that checks if a WorkSmart time tracker is running and help to restart it if it's not. It also provides options for autostart and manual start/stop of the process checking.",
   "version": "1.0.1",
   "repository": "https://github.com/trilogy-group/worksmart-notifier",
   "author": "Kostiantyn Korniienko <kostiantyn.korniienko@trilogy.com>",
@@ -7,12 +8,28 @@
   "scripts": {
     "build": "npx tsc",
     "start": "yarn run build && npx electron .",
-    "package": "npx electron-packager . --platform=win32"
+    "package": "npx electron-packager . --platform=win32 --out=dist",
+    "pack": "npx electron-builder --dir",
+    "dist": "npx electron-builder"
   },
-  "main": "dist/main.js",
+  "main": "out/main.js",
+  "build": {
+    "appId": "WorkSmart Notifier",
+    "win": {
+      "target": "nsis",
+      "icon": "images/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
   "devDependencies": {
     "@types/node": "^20.10.5",
     "electron": "^28.1.0",
+    "electron-builder": "24.9.1",
     "electron-packager": "^17.1.2",
     "typescript": "^5.3.3"
   },
@@ -22,7 +39,8 @@
     "auto-launch": "^5.0.6",
     "dotenv": "^16.3.1",
     "find-process": "^1.4.7",
-    "node-persist": "^4.0.1"
+    "node-persist": "^4.0.1",
+    "winston": "^3.11.0"
   },
   "packageManager": "yarn@4.0.2"
 }
