@@ -1,9 +1,9 @@
 import { Tray, Menu } from 'electron';
 import { processName } from './env';
-import { autoLauncher, configureAutoLaunch } from './autoLaunch';
-import { hasChecks, setupProcessChecks, stopProcessChecks, updateCheckerTray } from './processChecks';
+import { autoLaunchTrigger, hasAutoLaunch } from './autoLaunch';
+import { isCheckingTrigger } from './processChecks';
 import logger from './logger';
-import { notificationIcon } from './images';
+import { disabledNotificationIcon, notificationIcon } from './images';
 
 let tray: Tray | undefined;
 let contextMenu: Electron.Menu | undefined;
@@ -18,23 +18,14 @@ export async function createTray(app: Electron.App) {
       label: 'Is checking',
       type: 'checkbox',
       checked: true,
-      click: () => {
-        if (hasChecks()) {
-          stopProcessChecks();
-        } else {
-          setupProcessChecks(contextMenu, tray, 1_000);
-        }
-        updateCheckerTray(contextMenu, tray)
-      },
+      click: () => isCheckingTrigger(contextMenu, tray),
     },
     {
       id: 'autostart',
       label: 'Autostart',
       type: 'checkbox',
-      checked: await autoLauncher.isEnabled(),
-      click: async () => {
-        await configureAutoLaunch();
-      },
+      checked: await hasAutoLaunch(),
+      click: autoLaunchTrigger,
     },
     {
       label: 'Quit', click: () => {
@@ -46,4 +37,21 @@ export async function createTray(app: Electron.App) {
 
   tray.setContextMenu(contextMenu);
   return { tray, contextMenu }
+}
+
+export function updateCheckerTray(checksEnabled: boolean) {
+  logger.info('updating checker tray');
+  if (!contextMenu) {
+    logger.info('no context menu');
+    return;
+  }
+  const checker = contextMenu.getMenuItemById('checker');
+  if (!checker) {
+    logger.info('no checker');
+    return;
+  }
+  checker.checked = checksEnabled;
+  tray?.setImage(checksEnabled ? notificationIcon : disabledNotificationIcon);
+
+  logger.info('checker updated');
 }

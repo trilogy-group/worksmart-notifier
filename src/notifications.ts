@@ -23,7 +23,7 @@ export function appStartedNotification() {
   logger.info('notification finished');
 }
 
-export function executeRestartNotification(contextMenu: Electron.Menu | undefined, tray: Electron.Tray | undefined, restartProcess: () => Promise<void>, stopProcessChecks: () => void, updateCheckerTray: (contextMenu: Electron.Menu | undefined, tray: Electron.Tray | undefined) => void) {
+export function executeRestartNotification(restartProcess: () => Promise<void>, stopProcessChecks: () => void, updateCheckerTray: () => void) {
   if (restartNotification) {
     restartNotification.close();
     restartNotification = undefined;
@@ -40,7 +40,7 @@ export function executeRestartNotification(contextMenu: Electron.Menu | undefine
   restartNotification.on('close', (event) => {
     logger.info('close', event);
     stopProcessChecks();
-    updateCheckerTray(contextMenu, tray);
+    updateCheckerTray();
   });
   restartNotification.show();
 }

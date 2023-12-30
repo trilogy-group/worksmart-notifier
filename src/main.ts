@@ -22,13 +22,13 @@ app.on('ready', async () => {
     await configureAutoLaunch();
 
     // Create system tray
-    const { tray, contextMenu } = await createTray(app);
+    await createTray(app);
 
     // Show notification
     appStartedNotification();
 
     // Start process checks
-    setupProcessChecks(contextMenu, tray, 5_000);
+    setupProcessChecks(5_000);
 
 
     logger.info('App finished starting');

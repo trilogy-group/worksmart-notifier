@@ -1,8 +1,8 @@
 import AutoLaunch from 'auto-launch';
 import Store from 'electron-store';
 
-export const store = new Store();
-export const autoLauncher = new AutoLaunch({ name: 'WorkSmartNotifier' });
+const store = new Store();
+const autoLauncher = new AutoLaunch({ name: 'WorkSmartNotifier' });
 
 export async function configureAutoLaunch() {
   const autoStart = store.get('autoStart');
@@ -12,4 +12,20 @@ export async function configureAutoLaunch() {
     await autoLauncher.enable();
     store.set('autoStart', true);
   }
+}
+
+
+export async function autoLaunchTrigger() {
+  const autoStart = store.get('autoStart');
+  if (autoStart) {
+    await autoLauncher.disable();
+    store.set('autoStart', false);
+  } else {
+    await autoLauncher.enable();
+    store.set('autoStart', true);
+  }
+}
+
+export async function hasAutoLaunch() {
+  return await autoLauncher.isEnabled();
 }
