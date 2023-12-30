@@ -1,7 +1,7 @@
 {
   "name": "worksmart-notifier",
   "description": "WorkSmart Notifier is an application that checks if a WorkSmart time tracker is running and help to restart it if it's not. It also provides options for autostart and manual start/stop of the process checking.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": "https://github.com/trilogy-group/worksmart-notifier",
   "author": "Kostiantyn Korniienko <kostiantyn.korniienko@trilogy.com>",
   "license": "MIT",
