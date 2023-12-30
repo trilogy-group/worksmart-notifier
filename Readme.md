@@ -23,10 +23,11 @@ Show notifications:
 
 Note: Close notification does not mute further notifications but will restart the crossover application. Only the cross button in the top right will mute notifications.
 
-Display its tracking status and allow to disable checks:
+Display its tracking status and allow to disable checks or autostart on user login:
 
-![image](https://github.com/trilogy-group/worksmart-notifier/assets/37180625/4238812e-767f-4d80-ba40-f01faf8acd66)
-![image](https://github.com/trilogy-group/worksmart-notifier/assets/37180625/489677b4-31ab-4b54-bdc6-e7294edd7989)
+![image](https://github.com/trilogy-group/worksmart-notifier/assets/37180625/106fa3aa-fda4-4a5d-a7b3-16287867ffca)
+![image](https://github.com/trilogy-group/worksmart-notifier/assets/37180625/1105c679-4c50-4b4e-8182-c9c528d9aa60)
+
 
 
 
