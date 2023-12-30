@@ -41,11 +41,18 @@ jobs:
         id: package
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
+      - name: Get latest tag
+        id: previoustag
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+
       - name: Check if tag exists
         id: check
         run: |
-          TAG_EXISTS=$(curl --silent https://api.github.com/repos/$GITHUB_REPOSITORY/git/ref/tags/v${{ env.version }} > /dev/null; echo $?)
-          echo "exists=$TAG_EXISTS" >> $GITHUB_ENV
+          if [ "${{ steps.previoustag.outputs.tag }}" = "v${{ env.version }}" ]; then
+            echo "exists=0" >> $GITHUB_ENV
+          else
+            echo "exists=1" >> $GITHUB_ENV
+          fi
 
       - name: Create Release
         id: create_release
