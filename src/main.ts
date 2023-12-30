@@ -7,21 +7,60 @@ import os from 'os';
 import dotenv from 'dotenv';
 import AutoLaunch from 'auto-launch';
 import storage from 'node-persist';
-import winston from 'winston';
+import log4js from 'log4js';
+// import winston from 'winston';
 
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.File({ filename: path.join(os.homedir(), 'combined.log') }),
-    new winston.transports.Console()
-  ]
+// const logger = winston.createLogger({
+//   level: 'info',
+//   format: winston.format.combine(
+//     winston.format.timestamp(),
+//     // winston.format.json(),
+//     // winston.format.prettyPrint(),
+//     // winston.format.splat(),
+//     // winston.format.metadata({ fillExcept: ['message', 'level', 'timestamp'] }),
+//     // winston.format.simple()
+//     // output all logs to console including metadata
+//     winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+//       let msg = `${timestamp} [${level}] : ${message} `;
+//       if (metadata && Object.keys(metadata).length) {
+//         msg += JSON.stringify(metadata);
+//       }
+//       return msg;
+//     }),
+//     // winston.format.metadata(),
+//   ),
+//   transports: [
+//     new winston.transports.File({ filename: path.join(os.homedir(), 'combined.log') }),
+//     new winston.transports.Console()
+//   ]
+// });
+
+const logsDir = app.getPath('logs');
+const logFileName = path.join(logsDir, 'combined.log');
+// const fileName = path.join(os.homedir(), 'combined.log');
+
+log4js.configure({
+  appenders: {
+    file: {
+      type: 'dateFile',
+      // filename: path.join(os.homedir(), 'combined.log'),
+      filename: logFileName,
+      pattern: '.yyyy-MM-dd',
+      compress: true,
+      maxLogSize: 10485760, // 10 MB
+      backups: 3 // keep last 3 backup files
+    },
+    console: { type: 'console' }
+  },
+  categories: {
+    default: { appenders: ['file', 'console'], level: 'debug' }
+  }
 });
+var logger = log4js.getLogger();
 
 logger.info('Starting application');
+logger.info('logs file name', logFileName);
+
 
 dotenv.config();
 
@@ -34,9 +73,12 @@ let autoLauncher = new AutoLaunch({ name: 'WorkSmartNotifier' });
 let processFullPath = process.env.WORKSMART_PROCESS_PATH;
 let defaultTimeout = 15_000;
 const title = 'WorkSmart Notifier' as const;
-const appName = 'worksmart-notifier' as const;
-const appDir = join(app.getPath('userData'), appName);
+
+const appDir = app.getPath('userData');
 logger.info('appDir', appDir);
+
+
+
 
 function getPath(filePath: string) {
   return resolve(join(__dirname, filePath));
@@ -256,12 +298,3 @@ async function onReady() {
     logger.error('Error onReady', err);
   }
 }
-
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    logger.info('Exiting application');
-    app.quit();
-  }
-});
-
