@@ -15,7 +15,6 @@
   "main": "out/main.js",
   "build": {
     "appId": "WorkSmart Notifier",
-    "publish": "never",
     "win": {
       "target": "nsis",
       "icon": "images/icon.ico"
