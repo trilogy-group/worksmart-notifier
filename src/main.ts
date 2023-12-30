@@ -50,18 +50,14 @@ const appDir = app.getPath('userData');
 logger.info('appDir', appDir);
 
 
-
-
 function getPath(filePath: string) {
   return resolve(join(__dirname, filePath));
 }
 
-// let notificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256.png'));
-// let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256_disabled.png'));
-let notificationIcon = path.join(__dirname, '../images/Checker_256.png');
-let disabledNotificationIcon = path.join(__dirname, '../images/Checker_256_disabled.png');
-let iconPath = notificationIcon;
-logger.info('iconPath', iconPath);
+let notificationIconPath = path.join(__dirname, '../images/Checker_256.png');
+let notificationIcon = nativeImage.createFromPath(notificationIconPath);
+let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256_disabled.png'));
+logger.info('iconPath', notificationIconPath);
 
 const notificationObject: Pick<NotificationConstructorOptions, 'title' | 'icon'> = {
   title,
@@ -86,7 +82,7 @@ const store = new Store();
 
 async function createTray() {
   logger.info('creating tray');
-  tray = new Tray(iconPath);
+  tray = new Tray(notificationIcon);
   logger.info('setting up tray');
   tray.setToolTip(title);
   contextMenu = Menu.buildFromTemplate([
