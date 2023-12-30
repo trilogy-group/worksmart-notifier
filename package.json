@@ -10,7 +10,7 @@
     "start": "yarn run build && npx electron .",
     "package": "npx electron-packager . --platform=win32 --out=dist",
     "pack": "yarn run build && npx electron-builder --dir",
-    "dist": "yarn run build && npx electron-builder"
+    "dist": "yarn run build && npx electron-builder --win"
   },
   "main": "out/main.js",
   "build": {
