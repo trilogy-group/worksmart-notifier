@@ -6,8 +6,10 @@ import findProcess from 'find-process';
 import os from 'os';
 import dotenv from 'dotenv';
 import AutoLaunch from 'auto-launch';
+import storage from 'node-persist';
 
 dotenv.config();
+
 
 let tray: Tray | undefined;
 let contextMenu: Electron.Menu | undefined;
@@ -73,8 +75,10 @@ async function createTray() {
       click: async () => {
         if (await autoLauncher.isEnabled()) {
           autoLauncher.disable();
+          await storage.setItem('autoStart', true);
         } else {
           autoLauncher.enable();
+          await storage.setItem('autoStart', false);
         }
       },
     },
@@ -181,12 +185,14 @@ function notificationStart() {
 
 app.whenReady().then(async () => {
   app.setAppUserModelId(title);
+  await storage.init();
+  const autoStart = await storage.getItem('autoStart');
+  if (autoStart === undefined || autoStart && !(await autoLauncher.isEnabled())) {
+    autoLauncher.enable();
+  }
   await createTray();
   notificationStart();
   setupProcessChecks(5_000);
-  if (!(await autoLauncher.isEnabled())) {
-    autoLauncher.enable();
-  }
 });
 
 app.on('window-all-closed', () => {
