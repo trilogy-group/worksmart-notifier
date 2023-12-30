@@ -33,11 +33,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Install Dependencies
-        run: yarn run build
-
       - name: Package
-        run: yarn run package
+        run: yarn run dist
 
       - name: Get version
         id: package
@@ -72,11 +69,6 @@ jobs:
           draft: true
           prerelease: false
 
-      - name: Create zip of directory
-        if: steps.check.outputs.exists != '1'
-        run: |
-          zip -r worksmart-notifier-win32-x64.zip worksmart-notifier-win32-x64
-
       - name: Upload Release Asset
         if: steps.check.outputs.exists != '1'
         id: upload-release-asset
@@ -85,6 +77,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./worksmart-notifier-win32-x64.zip
-          asset_name: worksmart-notifier-win32-x64.zip
-          asset_content_type: application/zip
+          asset_path: ./dist/worksmart-notifier Setup ${{ env.version }}.exe
+          asset_name: worksmart-notifier Setup ${{ env.version }}.exe
+          asset_content_type: application/octet-stream
