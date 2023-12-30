@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3
@@ -43,16 +45,22 @@ jobs:
 
       - name: Get latest tag
         id: previoustag
-        uses: WyriHaximus/github-action-get-previous-tag@v1
+        run: echo $(git tag -l "${{ env.version }}") >> $GITHUB_ENV
 
       - name: Check if tag exists
         id: check
         run: |
-          if [ "${{ steps.previoustag.outputs.tag }}" = "v${{ env.version }}" ]; then
+          if [ -z "${{ env.previoustag }}" ]; then
             echo "exists=0" >> $GITHUB_ENV
           else
             echo "exists=1" >> $GITHUB_ENV
           fi
+
+      - name: Generate Changelog
+        id: changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
         id: create_release
@@ -63,6 +71,7 @@ jobs:
         with:
           tag_name: ${{ env.version }}
           release_name: Release ${{ env.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
           draft: true
           prerelease: false
 
