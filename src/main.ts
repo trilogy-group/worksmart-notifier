@@ -6,7 +6,7 @@ import findProcess from 'find-process';
 import os from 'os';
 import dotenv from 'dotenv';
 import AutoLaunch from 'auto-launch';
-import storage from 'node-persist';
+import Store from 'electron-store';
 import log4js from 'log4js';
 
 const logsDir = app.getPath('logs');
@@ -82,6 +82,8 @@ if (!processFullPath) {
 
 let processName = basename(processFullPath);
 
+const store = new Store();
+
 async function createTray() {
   logger.info('creating tray');
   tray = new Tray(iconPath);
@@ -112,10 +114,10 @@ async function createTray() {
       click: async () => {
         if (await autoLauncher.isEnabled()) {
           autoLauncher.disable();
-          await storage.setItem('autoStart', false);
+          store.set('autoStart', false);
         } else {
           autoLauncher.enable();
-          await storage.setItem('autoStart', true);
+          store.set('autoStart', true);
         }
       },
     },
@@ -251,14 +253,13 @@ async function onReady() {
     logger.info('App is ready');
     app.setAppUserModelId(title);
     logger.info('appUserModelId set');
-    await storage.init({ dir: appDir });
-    logger.info('storage initialized');
-    const autoStart = await storage.getItem('autoStart');
+    const autoStart = store.get('autoStart');
     logger.info('autoStart', autoStart);
     const autoLauncherEnabled = await autoLauncher.isEnabled();
     logger.info('autoStart', autoStart, 'autoLauncherEnabled', autoLauncherEnabled)
     if (autoStart === undefined || autoStart && !autoLauncherEnabled) {
       autoLauncher.enable();
+      store.set('autoStart', true);
       logger.info('autoLauncher enabled');
     }
     logger.info('autostart finished');

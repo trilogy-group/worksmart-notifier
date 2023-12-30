@@ -38,9 +38,9 @@
     "@types/node-persist": "^3.1.8",
     "auto-launch": "^5.0.6",
     "dotenv": "^16.3.1",
+    "electron-store": "^8.1.0",
     "find-process": "^1.4.7",
-    "log4js": "^6.9.1",
-    "node-persist": "^4.0.1"
+    "log4js": "^6.9.1"
   },
   "packageManager": "yarn@4.0.2"
 }
