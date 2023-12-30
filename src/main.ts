@@ -5,12 +5,14 @@ import { promisify } from 'util';
 import findProcess from 'find-process';
 import os from 'os';
 import dotenv from 'dotenv';
+import AutoLaunch from 'auto-launch';
 
 dotenv.config();
 
 let tray: Tray | undefined;
 let contextMenu: Electron.Menu | undefined;
 let restartNotification: Notification | undefined;
+let autoLauncher = new AutoLaunch({ name: 'WorkSmart Notifier' });
 
 let processFullPath = process.env.WORKSMART_PROCESS_PATH;
 let defaultTimeout = 15_000;
@@ -43,7 +45,7 @@ if (!processFullPath) {
 
 let processName = basename(processFullPath);
 
-function createTray() {
+async function createTray() {
   tray = new Tray(iconPath);
   tray.setToolTip(title);
   contextMenu = Menu.buildFromTemplate([
@@ -60,6 +62,20 @@ function createTray() {
           setupProcessChecks(1_000);
         }
         updateCheckerTray()
+      },
+    },
+    {
+      id: 'autostart',
+      label: 'Autostart',
+      toolTip: 'if checked, will start on user login',
+      type: 'checkbox',
+      checked: await autoLauncher.isEnabled(),
+      click: async () => {
+        if (await autoLauncher.isEnabled()) {
+          autoLauncher.disable();
+        } else {
+          autoLauncher.enable();
+        }
       },
     },
     { label: 'Quit', click: () => { app.quit(); } }
@@ -163,11 +179,14 @@ function notificationStart() {
   notification.show();
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   app.setAppUserModelId(title);
-  createTray();
+  await createTray();
   notificationStart();
   setupProcessChecks(5_000);
+  if (!(await autoLauncher.isEnabled())) {
+    autoLauncher.enable();
+  }
 });
 
 app.on('window-all-closed', () => {
