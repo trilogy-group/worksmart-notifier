@@ -18,10 +18,13 @@ The application uses environment variables to determine the process to monitor. 
 The application will begin monitoring the specified process and send a notification if the process stops once it has started.
 
 Show notifications:
+
 ![image](https://github.com/trilogy-group/worksmart-notifier/assets/37180625/c71db26b-e5b9-430b-9653-7e6b59c081e2)
+
 Note: Close notification does not mute further notifications but will restart the crossover application. Only the cross button in the top right will mute notifications.
 
 Display its tracking status and allow to disable checks:
+
 ![image](https://github.com/trilogy-group/worksmart-notifier/assets/37180625/4238812e-767f-4d80-ba40-f01faf8acd66)
 ![image](https://github.com/trilogy-group/worksmart-notifier/assets/37180625/489677b4-31ab-4b54-bdc6-e7294edd7989)
 
