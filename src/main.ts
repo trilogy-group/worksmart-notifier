@@ -1,6 +1,6 @@
 import { app, Tray, Menu, Notification, nativeImage, NotificationConstructorOptions } from 'electron';
 import { exec } from 'child_process';
-import { join, basename, resolve } from 'path';
+import path, { join, basename, resolve } from 'path';
 import { promisify } from 'util';
 import findProcess from 'find-process';
 import os from 'os';
@@ -16,7 +16,7 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   transports: [
-    new winston.transports.File({ filename: 'combined.log' }),
+    new winston.transports.File({ filename: path.join(os.homedir(), 'combined.log') }),
     new winston.transports.Console()
   ]
 });
@@ -29,19 +29,25 @@ dotenv.config();
 let tray: Tray | undefined;
 let contextMenu: Electron.Menu | undefined;
 let restartNotification: Notification | undefined;
-let autoLauncher = new AutoLaunch({ name: 'WorkSmartNotifier', isHidden: false });
+let autoLauncher = new AutoLaunch({ name: 'WorkSmartNotifier' });
 
 let processFullPath = process.env.WORKSMART_PROCESS_PATH;
 let defaultTimeout = 15_000;
 const title = 'WorkSmart Notifier' as const;
+const appName = 'worksmart-notifier' as const;
+const appDir = join(app.getPath('userData'), appName);
+logger.info('appDir', appDir);
 
 function getPath(filePath: string) {
-  return resolve(join(process.pkg ? process.pkg.defaultEntrypoint : __dirname, filePath));
+  return resolve(join(__dirname, filePath));
 }
 
-let notificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256.png'));
-let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256_disabled.png'));
+// let notificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256.png'));
+// let disabledNotificationIcon = nativeImage.createFromPath(getPath('../images/Checker_256_disabled.png'));
+let notificationIcon = path.join(__dirname, '../images/Checker_256.png');
+let disabledNotificationIcon = path.join(__dirname, '../images/Checker_256_disabled.png');
 let iconPath = notificationIcon;
+logger.info('iconPath', iconPath);
 
 const notificationObject: Pick<NotificationConstructorOptions, 'title' | 'icon'> = {
   title,
@@ -63,7 +69,9 @@ if (!processFullPath) {
 let processName = basename(processFullPath);
 
 async function createTray() {
+  logger.info('creating tray');
   tray = new Tray(iconPath);
+  logger.info('setting up tray');
   tray.setToolTip(title);
   contextMenu = Menu.buildFromTemplate([
     {
@@ -105,6 +113,7 @@ async function createTray() {
     }
   ]);
   tray.setContextMenu(contextMenu);
+  logger.info('tray created');
 }
 
 function updateCheckerTray() {
@@ -195,27 +204,59 @@ function setupProcessChecks(timeout = defaultTimeout) {
 }
 
 function notificationStart() {
+  logger.info('notification start');
   const notification = new Notification({
     ...notificationObject,
     body: 'Notifier started',
     silent: true,
   });
   notification.show();
+  logger.info('notification finished');
 }
 
-app.whenReady().then(async () => {
-  app.setAppUserModelId(title);
-  await storage.init();
-  const autoStart = await storage.getItem('autoStart');
-  const autoLauncherEnabled = await autoLauncher.isEnabled();
-  logger.info('autoStart', autoStart, 'autoLauncherEnabled', autoLauncherEnabled)
-  if (autoStart === undefined || autoStart && !autoLauncherEnabled) {
-    autoLauncher.enable();
+app.on('ready', async () => {
+  logger.info('Ready triggered (on)');
+  if (app.isReady()) {
+    onReady();
+  } else {
+    app.on('ready', onReady);
   }
-  await createTray();
-  notificationStart();
-  setupProcessChecks(5_000);
 });
+app.whenReady().then(() => {
+  logger.info('Ready triggered (whenReady)');
+}).then(onReady);
+
+let isExecuted = false;
+
+async function onReady() {
+  try {
+    if (isExecuted) {
+      return;
+    }
+    isExecuted = true;
+    logger.info('App is ready');
+    app.setAppUserModelId(title);
+    logger.info('appUserModelId set');
+    await storage.init({ dir: appDir });
+    logger.info('storage initialized');
+    const autoStart = await storage.getItem('autoStart');
+    logger.info('autoStart', autoStart);
+    const autoLauncherEnabled = await autoLauncher.isEnabled();
+    logger.info('autoStart', autoStart, 'autoLauncherEnabled', autoLauncherEnabled)
+    if (autoStart === undefined || autoStart && !autoLauncherEnabled) {
+      autoLauncher.enable();
+      logger.info('autoLauncher enabled');
+    }
+    logger.info('autostart finished');
+    await createTray();
+    notificationStart();
+    setupProcessChecks(5_000);
+    logger.info('App finished starting');
+  } catch (err) {
+    logger.error('Error onReady', err);
+  }
+}
+
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

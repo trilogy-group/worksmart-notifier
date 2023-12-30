@@ -9,8 +9,8 @@
     "build": "npx tsc",
     "start": "yarn run build && npx electron .",
     "package": "npx electron-packager . --platform=win32 --out=dist",
-    "pack": "npx electron-builder --dir",
-    "dist": "npx electron-builder"
+    "pack": "yarn run build && npx electron-builder --dir",
+    "dist": "yarn run build && npx electron-builder"
   },
   "main": "out/main.js",
   "build": {
