@@ -75,10 +75,10 @@ async function createTray() {
       click: async () => {
         if (await autoLauncher.isEnabled()) {
           autoLauncher.disable();
-          await storage.setItem('autoStart', true);
+          await storage.setItem('autoStart', false);
         } else {
           autoLauncher.enable();
-          await storage.setItem('autoStart', false);
+          await storage.setItem('autoStart', true);
         }
       },
     },
@@ -187,7 +187,9 @@ app.whenReady().then(async () => {
   app.setAppUserModelId(title);
   await storage.init();
   const autoStart = await storage.getItem('autoStart');
-  if (autoStart === undefined || autoStart && !(await autoLauncher.isEnabled())) {
+  const autoLauncherEnabled = await autoLauncher.isEnabled();
+  console.log('autoStart', autoStart, 'autoLauncherEnabled', autoLauncherEnabled)
+  if (autoStart === undefined || autoStart && !autoLauncherEnabled) {
     autoLauncher.enable();
   }
   await createTray();
