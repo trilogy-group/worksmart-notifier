@@ -17,14 +17,6 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Cache Wine
-        uses: actions/cache@v3
-        with:
-          path: ~/.wine
-          key: ${{ runner.os }}-wine
-          restore-keys: |
-            ${{ runner.os }}-wine
-
       - name: Install Wine
         run: |
           if [ ! -d ~/.wine ]; then
