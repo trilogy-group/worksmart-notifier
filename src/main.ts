@@ -8,42 +8,14 @@ import dotenv from 'dotenv';
 import AutoLaunch from 'auto-launch';
 import storage from 'node-persist';
 import log4js from 'log4js';
-// import winston from 'winston';
-
-// const logger = winston.createLogger({
-//   level: 'info',
-//   format: winston.format.combine(
-//     winston.format.timestamp(),
-//     // winston.format.json(),
-//     // winston.format.prettyPrint(),
-//     // winston.format.splat(),
-//     // winston.format.metadata({ fillExcept: ['message', 'level', 'timestamp'] }),
-//     // winston.format.simple()
-//     // output all logs to console including metadata
-//     winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-//       let msg = `${timestamp} [${level}] : ${message} `;
-//       if (metadata && Object.keys(metadata).length) {
-//         msg += JSON.stringify(metadata);
-//       }
-//       return msg;
-//     }),
-//     // winston.format.metadata(),
-//   ),
-//   transports: [
-//     new winston.transports.File({ filename: path.join(os.homedir(), 'combined.log') }),
-//     new winston.transports.Console()
-//   ]
-// });
 
 const logsDir = app.getPath('logs');
 const logFileName = path.join(logsDir, 'combined.log');
-// const fileName = path.join(os.homedir(), 'combined.log');
 
 log4js.configure({
   appenders: {
     file: {
       type: 'dateFile',
-      // filename: path.join(os.homedir(), 'combined.log'),
       filename: logFileName,
       pattern: '.yyyy-MM-dd',
       compress: true,
