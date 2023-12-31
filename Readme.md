@@ -34,3 +34,11 @@ Display its tracking status and allow to disable checks or autostart on user log
 ## Development
 
 The application is written in TypeScript. You can use the provided `tsconfig.json` for compilation settings. The main logic for process monitoring and notification is in `src/monitor.ts`.
+
+
+## Love using WorkSmart Notifier?
+
+Consider supporting further development by buying me a coffee here: 
+
+<a href="https://www.buymeacoffee.com/kkorniienko" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
